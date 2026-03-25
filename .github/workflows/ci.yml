@@ -2,16 +2,7 @@ name: CI
 on:
   push:
 
-permissions:
-  contents: write
-
 jobs:
-  test:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      - name: Configure git for private repos
-        run: git config --global url."https://${{ secrets.PRIVATE_ORG_REPO_READ }}@github.com/wow-look-at-my/".insteadOf "https://github.com/wow-look-at-my/"
-      - uses: wow-look-at-my/go-toolchain@fix-vanity-major-version
-        env:
-          GO_BUILDCACHE_CONFIG: ${{ secrets.GO_BUILDCACHE_CONFIG }}
+  build:
+    uses: wow-look-at-my/go-toolchain/.github/workflows/build.yml@v1
+    secrets: inherit
