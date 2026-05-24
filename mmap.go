@@ -67,7 +67,7 @@ var (
 // correctly even if the caller resliced the MMap.
 var (
 	mu       sync.Mutex
-	mappings = make(map[uintptr]int)
+	mappings = make(map[uintptr]int64)
 )
 
 func addMapping(b []byte) {
@@ -76,11 +76,11 @@ func addMapping(b []byte) {
 	}
 	key := pointerOf(b)
 	mu.Lock()
-	mappings[key] = len(b)
+	mappings[key] = int64(len(b))
 	mu.Unlock()
 }
 
-func removeMapping(b []byte) (int, bool) {
+func removeMapping(b []byte) (int64, bool) {
 	if len(b) == 0 {
 		return 0, false
 	}
@@ -97,6 +97,9 @@ func removeMapping(b []byte) (int, bool) {
 // MapFile maps an entire file for reading. The file is opened, its size
 // determined, and mapped read-only with shared visibility.
 // The caller must call Unmap when done.
+//
+// For block devices (e.g. /dev/sda1) where Stat does not report a size,
+// MapFile falls back to seeking to determine the device size.
 func MapFile(path string) (MMap, error) {
 	f, err := os.Open(path)
 	if err != nil {
@@ -111,10 +114,16 @@ func MapFile(path string) (MMap, error) {
 
 	size := fi.Size()
 	if size == 0 {
-		return nil, ErrZeroLength
+		if fi.Mode().IsRegular() {
+			return nil, ErrZeroLength
+		}
+		size, err = f.Seek(0, io.SeekEnd)
+		if err != nil || size == 0 {
+			return nil, ErrZeroLength
+		}
 	}
 
-	return MapRegion(int(f.Fd()), int(size), ProtRead, MapShared, 0)
+	return MapRegion(int(f.Fd()), size, ProtRead, MapShared, 0)
 }
 
 // MapRegion maps a region of a file descriptor (or anonymous memory) into the
@@ -124,7 +133,7 @@ func MapFile(path string) (MMap, error) {
 // set MapAnonymous in flags). length is the number of bytes to map and must be
 // > 0. offset is the byte offset in the file where mapping begins and must be
 // page-aligned.
-func MapRegion(fd int, length int, prot Prot, flags Flag, offset int64) (MMap, error) {
+func MapRegion(fd int, length int64, prot Prot, flags Flag, offset int64) (MMap, error) {
 	if length <= 0 {
 		return nil, ErrZeroLength
 	}

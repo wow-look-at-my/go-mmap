@@ -70,8 +70,8 @@ func adviceToUnix(a Advice) int {
 	}
 }
 
-func mapRegion(fd int, length int, prot Prot, flags Flag, offset int64) ([]byte, error) {
-	b, err := unix.Mmap(fd, offset, length, protToUnix(prot), flagToUnix(flags))
+func mapRegion(fd int, length int64, prot Prot, flags Flag, offset int64) ([]byte, error) {
+	b, err := unix.Mmap(fd, offset, int(length), protToUnix(prot), flagToUnix(flags))
 	if err != nil {
 		return nil, fmt.Errorf("mmap: %w", err)
 	}

@@ -58,7 +58,7 @@ func TestMapRegionReadOnly(t *testing.T) {
 
 	defer f.Close()
 
-	m, err := MapRegion(int(f.Fd()), len(want), ProtRead, MapShared, 0)
+	m, err := MapRegion(int(f.Fd()), int64(len(want)), ProtRead, MapShared, 0)
 	require.Nil(t, err)
 
 	defer m.Unmap()
@@ -76,7 +76,7 @@ func TestMapRegionReadWrite(t *testing.T) {
 
 	defer f.Close()
 
-	m, err := MapRegion(int(f.Fd()), len(initial), ProtRead|ProtWrite, MapShared, 0)
+	m, err := MapRegion(int(f.Fd()), int64(len(initial)), ProtRead|ProtWrite, MapShared, 0)
 	require.Nil(t, err)
 
 	// Modify the mapping.
@@ -103,7 +103,7 @@ func TestMapRegionPrivate(t *testing.T) {
 
 	defer f.Close()
 
-	m, err := MapRegion(int(f.Fd()), len(initial), ProtRead|ProtWrite, MapPrivate, 0)
+	m, err := MapRegion(int(f.Fd()), int64(len(initial)), ProtRead|ProtWrite, MapPrivate, 0)
 	require.Nil(t, err)
 
 	// Write to the private mapping.
@@ -119,7 +119,7 @@ func TestMapRegionPrivate(t *testing.T) {
 }
 
 func TestAnonymousMapping(t *testing.T) {
-	size := os.Getpagesize()
+	size := int64(os.Getpagesize())
 	m, err := MapRegion(-1, size, ProtRead|ProtWrite, MapPrivate|MapAnonymous, 0)
 	require.Nil(t, err)
 
@@ -155,7 +155,7 @@ func TestMapRegionWithOffset(t *testing.T) {
 	defer f.Close()
 
 	// Map only the second page.
-	m, err := MapRegion(int(f.Fd()), pageSize, ProtRead, MapShared, int64(pageSize))
+	m, err := MapRegion(int(f.Fd()), int64(pageSize), ProtRead, MapShared, int64(pageSize))
 	require.Nil(t, err)
 
 	defer m.Unmap()
@@ -173,7 +173,7 @@ func TestFlush(t *testing.T) {
 
 	defer f.Close()
 
-	m, err := MapRegion(int(f.Fd()), len(data), ProtRead|ProtWrite, MapShared, 0)
+	m, err := MapRegion(int(f.Fd()), int64(len(data)), ProtRead|ProtWrite, MapShared, 0)
 	require.Nil(t, err)
 
 	defer m.Unmap()
@@ -309,7 +309,7 @@ func TestReaderWriteAt(t *testing.T) {
 
 	defer f.Close()
 
-	m, err := MapRegion(int(f.Fd()), len(data), ProtRead|ProtWrite, MapShared, 0)
+	m, err := MapRegion(int(f.Fd()), int64(len(data)), ProtRead|ProtWrite, MapShared, 0)
 	require.Nil(t, err)
 
 	r := NewReader(m)

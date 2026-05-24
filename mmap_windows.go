@@ -43,7 +43,7 @@ func protToWindows(p Prot, f Flag) (flProtect uint32, dwAccess uint32) {
 	}
 }
 
-func mapRegion(fd int, length int, prot Prot, flags Flag, offset int64) ([]byte, error) {
+func mapRegion(fd int, length int64, prot Prot, flags Flag, offset int64) ([]byte, error) {
 	flProtect, dwAccess := protToWindows(prot, flags)
 
 	var fHandle windows.Handle
@@ -53,7 +53,6 @@ func mapRegion(fd int, length int, prot Prot, flags Flag, offset int64) ([]byte,
 		fHandle = windows.Handle(uintptr(fd))
 	}
 
-	// CreateFileMapping maxSize covers the mapped region from the offset.
 	maxSize := uint64(offset) + uint64(length)
 	maxSizeHigh := uint32(maxSize >> 32)
 	maxSizeLow := uint32(maxSize & 0xFFFFFFFF)
@@ -72,7 +71,7 @@ func mapRegion(fd int, length int, prot Prot, flags Flag, offset int64) ([]byte,
 		return nil, fmt.Errorf("MapViewOfFile: %w", err)
 	}
 
-	b := unsafe.Slice((*byte)(unsafe.Pointer(addr)), length)
+	b := unsafe.Slice((*byte)(unsafe.Pointer(addr)), int(length))
 
 	wm := windowsMapping{mapHandle: h}
 	if fHandle != windows.InvalidHandle {
