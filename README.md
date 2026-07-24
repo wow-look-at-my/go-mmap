@@ -2,7 +2,7 @@
 
 Cross-platform memory-mapped file I/O for Go. Pure Go, no cgo.
 
-Supports Linux, macOS, and Windows.
+Supports Linux, macOS, and Windows. Works with regular files and block devices.
 
 ## Install
 
@@ -43,7 +43,7 @@ m.Flush(mmap.SyncSync)
 ### Anonymous mapping (not backed by a file)
 
 ```go
-m, err := mmap.MapRegion(-1, os.Getpagesize(), mmap.ProtRead|mmap.ProtWrite, mmap.MapPrivate|mmap.MapAnonymous, 0)
+m, err := mmap.MapRegion(-1, int64(os.Getpagesize()), mmap.ProtRead|mmap.ProtWrite, mmap.MapPrivate|mmap.MapAnonymous, 0)
 if err != nil {
     log.Fatal(err)
 }
