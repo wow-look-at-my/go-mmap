@@ -1,6 +1,6 @@
 // Package mmap provides a cross-platform interface for memory-mapped file I/O.
 //
-// It supports Linux, macOS, and Windows without cgo.
+// It supports Linux, macOS, Windows, and Cosmopolitan without cgo.
 package mmap
 
 import (
