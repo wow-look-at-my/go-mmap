@@ -2,11 +2,11 @@ package mmap
 
 import (
 	"bytes"
+	"github.com/stretchr/testify/require"
 	"io"
 	"os"
 	"path/filepath"
 	"testing"
-	"github.com/wow-look-at-my/testify/require"
 )
 
 func tempFile(t *testing.T, data []byte) string {
@@ -160,7 +160,7 @@ func TestMapRegionWithOffset(t *testing.T) {
 
 	defer m.Unmap()
 
-	require.Equal(t, 'B', m[0])
+	require.Equal(t, byte('B'), m[0])
 
 }
 
