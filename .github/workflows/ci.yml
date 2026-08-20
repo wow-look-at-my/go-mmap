@@ -16,4 +16,10 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+      # This module is a library. It has no main package, so a build produces
+      # an ar archive that nobody downloads, and buildhost rejects it once the
+      # cosmo target succeeds: an archive carries no APE magic. Consumers take
+      # this module through the Go module proxy.
       - uses: wow-look-at-my/go-toolchain@v1
+        with:
+          autorelease: 'false'
