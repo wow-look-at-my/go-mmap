@@ -1,6 +1,6 @@
 // Package mmap provides a cross-platform interface for memory-mapped file I/O.
 //
-// It supports Linux, macOS, and Windows without cgo.
+// It supports Linux, macOS, Windows, and Cosmopolitan without cgo.
 package mmap
 
 import (
@@ -20,8 +20,8 @@ type Prot int
 
 const (
 	ProtRead  Prot = 1 << iota // Pages may be read.
-	ProtWrite                   // Pages may be written.
-	ProtExec                    // Pages may be executed.
+	ProtWrite                  // Pages may be written.
+	ProtExec                   // Pages may be executed.
 
 	ProtNone Prot = 0 // Pages may not be accessed.
 )
