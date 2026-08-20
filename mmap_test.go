@@ -160,7 +160,7 @@ func TestMapRegionWithOffset(t *testing.T) {
 
 	defer m.Unmap()
 
-	require.Equal(t, 'B', m[0])
+	require.Equal(t, byte('B'), m[0])
 
 }
 
