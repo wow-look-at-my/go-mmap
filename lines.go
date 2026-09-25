@@ -6,20 +6,37 @@ import (
 	"os"
 )
 
-// Lines yields each line of m without its line ending, "\n" or "\r\n". A final
-// line with no newline is yielded too. Each line is a subslice of the mapping,
-// so a line costs no copy and has no length limit. A line is valid only until
-// Unmap.
+// Scanner returns the lines of a mapping on demand, and reads no further than
+// the line it returns.
+type Scanner struct {
+	rest []byte
+}
+
+// Scanner answers a Scanner positioned at the start of m.
+func (m MMap) Scanner() *Scanner {
+	return &Scanner{rest: m}
+}
+
+// Next answers the next line without its line ending, or false at the end of
+// the mapping. The line is a subslice of the mapping and is valid until Unmap.
+func (s *Scanner) Next() ([]byte, bool) {
+	if len(s.rest) == 0 {
+		return nil, false
+	}
+	line := s.rest
+	s.rest = nil
+	if idx := bytes.IndexByte(line, '\n'); idx >= 0 {
+		line, s.rest = line[:idx], line[idx+1:]
+	}
+	return bytes.TrimSuffix(line, []byte{'\r'}), true
+}
+
+// Lines yields the lines of m as Scanner.Next returns them.
 func (m MMap) Lines() iter.Seq[[]byte] {
 	return func(yield func([]byte) bool) {
-		rest := []byte(m)
-		for len(rest) > 0 {
-			line := rest
-			rest = nil
-			if idx := bytes.IndexByte(line, '\n'); idx >= 0 {
-				line, rest = line[:idx], line[idx+1:]
-			}
-			if !yield(bytes.TrimSuffix(line, []byte{'\r'})) {
+		scan := m.Scanner()
+		for line, ok := scan.Next(); ok; line, ok = scan.Next() {
+			if !yield(line) {
 				return
 			}
 		}

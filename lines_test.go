@@ -57,7 +57,24 @@ func TestFileLinesMissingFileFails(t *testing.T) {
 	assert.ErrorIs(t, err, os.ErrNotExist)
 }
 
-// A line is a subslice of the mapping, never a copy.
+func TestScannerNext(t *testing.T) {
+	path := filepath.Join(t.TempDir(), "lines.txt")
+	require.NoError(t, os.WriteFile(path, []byte("a\r\n\nlast"), 0o644))
+	mapped, err := MapFile(path)
+	require.NoError(t, err)
+	defer mapped.Unmap()
+
+	scan := mapped.Scanner()
+	for _, want := range []string{"a", "", "last"} {
+		line, ok := scan.Next()
+		require.True(t, ok)
+		assert.Equal(t, want, string(line))
+	}
+	line, ok := scan.Next()
+	assert.False(t, ok)
+	assert.Nil(t, line)
+}
+
 func TestLinesAreSubslicesOfTheMapping(t *testing.T) {
 	path := filepath.Join(t.TempDir(), "lines.txt")
 	require.NoError(t, os.WriteFile(path, []byte("ab\ncd\n"), 0o644))
