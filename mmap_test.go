@@ -138,7 +138,6 @@ func TestAnonymousMapping(t *testing.T) {
 func TestMapRegionWithOffset(t *testing.T) {
 	pageSize := os.Getpagesize()
 
-	// Create a file with 2 pages of data.
 	data := make([]byte, pageSize*2)
 	for i := range data {
 		if i < pageSize {
@@ -154,7 +153,7 @@ func TestMapRegionWithOffset(t *testing.T) {
 
 	defer f.Close()
 
-	// Map only the second page.
+	// Map only the next page.
 	m, err := MapRegion(int(f.Fd()), int64(pageSize), ProtRead, MapShared, int64(pageSize))
 	require.Nil(t, err)
 
@@ -223,7 +222,6 @@ func TestUnmap(t *testing.T) {
 
 	require.NoError(t, m.Unmap())
 
-	// Second unmap should return ErrUnmapped.
 	err = m.Unmap()
 	require.Equal(t, ErrUnmapped, err)
 
@@ -334,7 +332,6 @@ func TestReaderSeek(t *testing.T) {
 	r := NewReader(m)
 	defer r.Close()
 
-	// Seek to offset 5.
 	pos, err := r.Seek(5, io.SeekStart)
 	require.Nil(t, err)
 
