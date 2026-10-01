@@ -9,10 +9,10 @@ import (
 )
 
 // A Cosmopolitan binary runs on Linux, macOS, Windows and the BSDs, and its
-// system call layer speaks the Linux ABI on every one of them. So the numbers
-// below are Linux's, and they are the portable ones here. golang.org/x/sys/unix
-// does not build for this target, and the standard syscall package carries only
-// mmap and munmap, so the rest go through syscall.Syscall.
+// system call layer speaks the Linux ABI on each of them. So the numbers below
+// are Linux's, and they are the portable ones here. golang.org/x/sys/unix does
+// not build for this target, and the standard syscall package carries only mmap
+// and munmap, so the rest go through syscall.Syscall.
 const (
 	msAsync      = 0x1
 	msInvalidate = 0x2
@@ -86,8 +86,8 @@ func adviceToCosmo(a Advice) int {
 	}
 }
 
-// region calls one of the system calls that take an address, a length and one
-// flag word. The caller has already refused an empty mapping.
+// region calls any of the system calls that take an address, a length and a
+// single flag word. The caller has already refused an empty mapping.
 func region(trap uintptr, name string, b []byte, arg int) error {
 	_, _, errno := syscall.Syscall(trap, pointerOf(b), uintptr(len(b)), uintptr(arg))
 	if errno != 0 {
