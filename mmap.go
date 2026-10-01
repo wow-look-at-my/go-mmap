@@ -129,10 +129,8 @@ func MapFile(path string) (MMap, error) {
 // MapRegion maps a region of a file descriptor (or anonymous memory) into the
 // process address space.
 //
-// fd is the file descriptor to map. Pass -1 for anonymous mappings (must also
-// set MapAnonymous in flags). length is the number of bytes to map and must be
-// > 0. offset is the byte offset in the file where mapping begins and must be
-// page-aligned.
+// fd is the file descriptor to map. offset is the byte offset in the file
+// where mapping begins and must be page-aligned.
 func MapRegion(fd int, length int64, prot Prot, flags Flag, offset int64) (MMap, error) {
 	if length <= 0 {
 		return nil, ErrZeroLength
