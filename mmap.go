@@ -1,6 +1,6 @@
 // Package mmap provides a cross-platform interface for memory-mapped file I/O.
 //
-// It supports Linux, macOS, and Windows without cgo.
+// It supports Linux, macOS, Windows, and Cosmopolitan without cgo.
 package mmap
 
 import (
@@ -20,8 +20,8 @@ type Prot int
 
 const (
 	ProtRead  Prot = 1 << iota // Pages may be read.
-	ProtWrite                   // Pages may be written.
-	ProtExec                    // Pages may be executed.
+	ProtWrite                  // Pages may be written.
+	ProtExec                   // Pages may be executed.
 
 	ProtNone Prot = 0 // Pages may not be accessed.
 )
@@ -129,10 +129,8 @@ func MapFile(path string) (MMap, error) {
 // MapRegion maps a region of a file descriptor (or anonymous memory) into the
 // process address space.
 //
-// fd is the file descriptor to map. Pass -1 for anonymous mappings (must also
-// set MapAnonymous in flags). length is the number of bytes to map and must be
-// > 0. offset is the byte offset in the file where mapping begins and must be
-// page-aligned.
+// fd is the file descriptor to map. offset is the byte offset in the file
+// where mapping begins and must be page-aligned.
 func MapRegion(fd int, length int64, prot Prot, flags Flag, offset int64) (MMap, error) {
 	if length <= 0 {
 		return nil, ErrZeroLength

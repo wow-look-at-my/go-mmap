@@ -2,7 +2,7 @@
 
 Cross-platform memory-mapped file I/O for Go. Pure Go, no cgo.
 
-Supports Linux, macOS, and Windows. Works with regular files and block devices.
+Supports Linux, macOS, Windows, and Cosmopolitan (`GOOS=cosmo`, one binary for all three). Works with regular files and block devices.
 
 ## Install
 
