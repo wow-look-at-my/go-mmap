@@ -1,3 +1,5 @@
+//go:build cosmo || darwin || linux || windows
+
 // Package mmap provides a cross-platform interface for memory-mapped file I/O.
 //
 // It supports Linux, macOS, Windows, and Cosmopolitan without cgo.
