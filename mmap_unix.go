@@ -9,6 +9,9 @@ import (
 	"golang.org/x/sys/unix"
 )
 
+// supported reports whether this platform maps memory.
+const supported = true
+
 func pointerOf(b []byte) uintptr {
 	return uintptr(unsafe.Pointer(&b[0]))
 }

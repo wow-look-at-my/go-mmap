@@ -2,12 +2,25 @@ package mmap
 
 import (
 	"bytes"
+	"errors"
 	"github.com/stretchr/testify/require"
 	"io"
 	"os"
 	"path/filepath"
 	"testing"
 )
+
+// mapped reports whether a map call succeeded. Where the platform maps no
+// memory, the call must fail with errors.ErrUnsupported.
+func mapped(t *testing.T, err error) bool {
+	t.Helper()
+	if !supported {
+		require.ErrorIs(t, err, errors.ErrUnsupported)
+		return false
+	}
+	require.NoError(t, err)
+	return true
+}
 
 func tempFile(t *testing.T, data []byte) string {
 	t.Helper()
@@ -27,7 +40,9 @@ func TestMapFile(t *testing.T) {
 	path := tempFile(t, want)
 
 	m, err := MapFile(path)
-	require.Nil(t, err)
+	if !mapped(t, err) {
+		return
+	}
 
 	defer m.Unmap()
 
@@ -59,7 +74,9 @@ func TestMapRegionReadOnly(t *testing.T) {
 	defer f.Close()
 
 	m, err := MapRegion(int(f.Fd()), int64(len(want)), ProtRead, MapShared, 0)
-	require.Nil(t, err)
+	if !mapped(t, err) {
+		return
+	}
 
 	defer m.Unmap()
 
@@ -77,7 +94,9 @@ func TestMapRegionReadWrite(t *testing.T) {
 	defer f.Close()
 
 	m, err := MapRegion(int(f.Fd()), int64(len(initial)), ProtRead|ProtWrite, MapShared, 0)
-	require.Nil(t, err)
+	if !mapped(t, err) {
+		return
+	}
 
 	// Modify the mapping.
 	copy(m, []byte("CHANGED DATA!!"))
@@ -104,7 +123,9 @@ func TestMapRegionPrivate(t *testing.T) {
 	defer f.Close()
 
 	m, err := MapRegion(int(f.Fd()), int64(len(initial)), ProtRead|ProtWrite, MapPrivate, 0)
-	require.Nil(t, err)
+	if !mapped(t, err) {
+		return
+	}
 
 	// Write to the private mapping.
 	copy(m, []byte("XXXXXXXXXXXXXXXXX"))
@@ -121,7 +142,9 @@ func TestMapRegionPrivate(t *testing.T) {
 func TestAnonymousMapping(t *testing.T) {
 	size := int64(os.Getpagesize())
 	m, err := MapRegion(-1, size, ProtRead|ProtWrite, MapPrivate|MapAnonymous, 0)
-	require.Nil(t, err)
+	if !mapped(t, err) {
+		return
+	}
 
 	defer m.Unmap()
 
@@ -155,7 +178,9 @@ func TestMapRegionWithOffset(t *testing.T) {
 
 	// Map only the next page.
 	m, err := MapRegion(int(f.Fd()), int64(pageSize), ProtRead, MapShared, int64(pageSize))
-	require.Nil(t, err)
+	if !mapped(t, err) {
+		return
+	}
 
 	defer m.Unmap()
 
@@ -173,7 +198,9 @@ func TestFlush(t *testing.T) {
 	defer f.Close()
 
 	m, err := MapRegion(int(f.Fd()), int64(len(data)), ProtRead|ProtWrite, MapShared, 0)
-	require.Nil(t, err)
+	if !mapped(t, err) {
+		return
+	}
 
 	defer m.Unmap()
 
@@ -188,7 +215,9 @@ func TestLockUnlock(t *testing.T) {
 	path := tempFile(t, data)
 
 	m, err := MapFile(path)
-	require.Nil(t, err)
+	if !mapped(t, err) {
+		return
+	}
 
 	defer m.Unmap()
 
@@ -203,7 +232,9 @@ func TestAdvise(t *testing.T) {
 	path := tempFile(t, data)
 
 	m, err := MapFile(path)
-	require.Nil(t, err)
+	if !mapped(t, err) {
+		return
+	}
 
 	defer m.Unmap()
 
@@ -218,7 +249,9 @@ func TestUnmap(t *testing.T) {
 	path := tempFile(t, data)
 
 	m, err := MapFile(path)
-	require.Nil(t, err)
+	if !mapped(t, err) {
+		return
+	}
 
 	require.NoError(t, m.Unmap())
 
@@ -259,7 +292,9 @@ func TestReaderRead(t *testing.T) {
 	path := tempFile(t, data)
 
 	m, err := MapFile(path)
-	require.Nil(t, err)
+	if !mapped(t, err) {
+		return
+	}
 
 	r := NewReader(m)
 	defer r.Close()
@@ -285,7 +320,9 @@ func TestReaderReadAt(t *testing.T) {
 	path := tempFile(t, data)
 
 	m, err := MapFile(path)
-	require.Nil(t, err)
+	if !mapped(t, err) {
+		return
+	}
 
 	r := NewReader(m)
 	defer r.Close()
@@ -308,7 +345,9 @@ func TestReaderWriteAt(t *testing.T) {
 	defer f.Close()
 
 	m, err := MapRegion(int(f.Fd()), int64(len(data)), ProtRead|ProtWrite, MapShared, 0)
-	require.Nil(t, err)
+	if !mapped(t, err) {
+		return
+	}
 
 	r := NewReader(m)
 	defer r.Close()
@@ -327,7 +366,9 @@ func TestReaderSeek(t *testing.T) {
 	path := tempFile(t, data)
 
 	m, err := MapFile(path)
-	require.Nil(t, err)
+	if !mapped(t, err) {
+		return
+	}
 
 	r := NewReader(m)
 	defer r.Close()
@@ -357,7 +398,9 @@ func TestReaderSeekNegative(t *testing.T) {
 	path := tempFile(t, data)
 
 	m, err := MapFile(path)
-	require.Nil(t, err)
+	if !mapped(t, err) {
+		return
+	}
 
 	r := NewReader(m)
 	defer r.Close()

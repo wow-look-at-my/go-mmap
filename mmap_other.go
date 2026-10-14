@@ -9,6 +9,9 @@ import (
 
 // This platform maps no memory. Every call fails, so a caller falls back to plain reads.
 
+// supported reports whether this platform maps memory.
+const supported = false
+
 func pointerOf(b []byte) uintptr {
 	return uintptr(unsafe.Pointer(&b[0]))
 }
