@@ -112,7 +112,9 @@ func mapRegion(fd int, length int64, prot Prot, flags Flag, offset int64) ([]byt
 		return nil, fmt.Errorf("MapViewOfFile: %w", err)
 	}
 
-	b := unsafe.Slice((*byte)(unsafe.Pointer(addr+uintptr(delta))), int(length))
+	// The view is not Go memory, so reading addr as a pointer is sound.
+	base := *(*unsafe.Pointer)(unsafe.Pointer(&addr))
+	b := unsafe.Slice((*byte)(unsafe.Add(base, delta)), int(length))
 
 	wm := windowsMapping{mapHandle: h, view: addr}
 	if fHandle != windows.InvalidHandle {
