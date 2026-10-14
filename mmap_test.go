@@ -188,6 +188,44 @@ func TestMapRegionWithOffset(t *testing.T) {
 
 }
 
+// The mapping must still start at that offset, write through, and unmap
+// cleanly.
+func TestMapRegionAtPageOffsetWritesThrough(t *testing.T) {
+	const span = 64 << 10
+	pageSize := os.Getpagesize()
+	offset := pageSize * 3
+
+	data := make([]byte, offset+2*span)
+	for idx := range data {
+		data[idx] = byte(idx / pageSize)
+	}
+	path := tempFile(t, data)
+
+	f, err := os.OpenFile(path, os.O_RDWR, 0)
+	require.NoError(t, err)
+	defer f.Close()
+
+	m, err := MapRegion(int(f.Fd()), span, ProtRead|ProtWrite, MapShared, int64(offset))
+	if !mapped(t, err) {
+		return
+	}
+	require.Len(t, m, span)
+	require.Equal(t, data[offset:offset+span], []byte(m), "the mapping starts at the requested offset")
+
+	copy(m, "head")
+	copy(m[span-4:], "tail")
+	require.NoError(t, m.Flush(SyncSync))
+	require.NoError(t, m.Unmap())
+	require.ErrorIs(t, m.Unmap(), ErrUnmapped)
+
+	got, err := os.ReadFile(path)
+	require.NoError(t, err)
+	want := bytes.Clone(data)
+	copy(want[offset:], "head")
+	copy(want[offset+span-4:], "tail")
+	require.Equal(t, want, got)
+}
+
 func TestFlush(t *testing.T) {
 	data := []byte("flush test data!")
 	path := tempFile(t, data)
