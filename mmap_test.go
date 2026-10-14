@@ -181,9 +181,7 @@ func TestMapRegionAtPageOffsetWritesThrough(t *testing.T) {
 	defer f.Close()
 
 	m, err := MapRegion(int(f.Fd()), span, ProtRead|ProtWrite, MapShared, int64(offset))
-	if !mapped(t, err) {
-		return
-	}
+	require.NoError(t, err)
 	require.Len(t, m, span)
 	require.Equal(t, data[offset:offset+span], []byte(m), "the mapping starts at the requested offset")
 
