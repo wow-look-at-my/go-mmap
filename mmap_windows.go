@@ -19,12 +19,38 @@ func pointerOf(b []byte) uintptr {
 type windowsMapping struct {
 	mapHandle  windows.Handle
 	fileHandle windows.Handle // only set for non-anonymous mappings where we need FlushFileBuffers
+	view       uintptr        // the address MapViewOfFile returned, which UnmapViewOfFile takes
 }
 
 var (
 	handleMu sync.Mutex
 	handles  = make(map[uintptr]windowsMapping)
 )
+
+// systemInfo is the head of SYSTEM_INFO, up to the allocation granularity.
+type systemInfo struct {
+	processorArchitecture uint16
+	reserved              uint16
+	pageSize              uint32
+	minimumAddress        uintptr
+	maximumAddress        uintptr
+	activeProcessorMask   uintptr
+	numberOfProcessors    uint32
+	processorType         uint32
+	allocationGranularity uint32
+	processorLevel        uint16
+	processorRevision     uint16
+}
+
+var procGetSystemInfo = windows.NewLazySystemDLL("kernel32.dll").NewProc("GetSystemInfo")
+
+// allocationGranularity is the alignment MapViewOfFile requires of a file
+// offset. It is larger than the page size that MapRegion checks against.
+var allocationGranularity = sync.OnceValue(func() int64 {
+	var info systemInfo
+	procGetSystemInfo.Call(uintptr(unsafe.Pointer(&info)))
+	return int64(info.allocationGranularity)
+})
 
 func protToWindows(p Prot, f Flag) (flProtect uint32, dwAccess uint32) {
 	if f&MapPrivate != 0 {
@@ -62,18 +88,22 @@ func mapRegion(fd int, length int64, prot Prot, flags Flag, offset int64) ([]byt
 		return nil, fmt.Errorf("CreateFileMapping: %w", err)
 	}
 
-	offsetHigh := uint32(uint64(offset) >> 32)
-	offsetLow := uint32(uint64(offset) & 0xFFFFFFFF)
+	// The view starts at the granularity boundary at or below offset. The
+	// caller gets the part of it that begins at offset.
+	lead := offset % allocationGranularity()
+	viewOffset := offset - lead
+	offsetHigh := uint32(uint64(viewOffset) >> 32)
+	offsetLow := uint32(uint64(viewOffset) & 0xFFFFFFFF)
 
-	addr, err := windows.MapViewOfFile(h, dwAccess, offsetHigh, offsetLow, uintptr(length))
+	addr, err := windows.MapViewOfFile(h, dwAccess, offsetHigh, offsetLow, uintptr(lead+length))
 	if err != nil {
 		windows.CloseHandle(h)
 		return nil, fmt.Errorf("MapViewOfFile: %w", err)
 	}
 
-	b := unsafe.Slice((*byte)(unsafe.Pointer(addr)), int(length))
+	b := unsafe.Slice((*byte)(unsafe.Pointer(addr)), int(lead+length))[lead:]
 
-	wm := windowsMapping{mapHandle: h}
+	wm := windowsMapping{mapHandle: h, view: addr}
 	if fHandle != windows.InvalidHandle {
 		wm.fileHandle = fHandle
 	}
@@ -97,6 +127,9 @@ func unmapRegion(b []byte) error {
 	handleMu.Unlock()
 
 	addr := uintptr(unsafe.Pointer(&b[0]))
+	if ok {
+		addr = wm.view
+	}
 	if err := windows.UnmapViewOfFile(addr); err != nil {
 		return fmt.Errorf("UnmapViewOfFile: %w", err)
 	}
