@@ -9,8 +9,7 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-// A build for WebAssembly must refuse this package, because no mapping exists
-// there. A file without the constraint lets the package build.
+// A file without the constraint lets the package build.
 func TestNoFileBuildsOnWasm(t *testing.T) {
 	for _, goos := range []string{"js", "wasip1"} {
 		ctx := build.Default

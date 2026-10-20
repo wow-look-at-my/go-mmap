@@ -1,5 +1,4 @@
-// WebAssembly has no mmap, so no file of this package builds there.
-//go:build !js && !wasip1
+//go:build cosmo || darwin || linux || windows
 
 // Package mmap provides a cross-platform interface for memory-mapped file I/O.
 //
@@ -14,8 +13,7 @@ import (
 	"sync"
 )
 
-// MMap represents a memory-mapped region. It is a named []byte type so callers
-// can index, slice, and range over mapped memory directly.
+// MMap represents a memory-mapped region.
 type MMap []byte
 
 // Prot describes memory protection flags.

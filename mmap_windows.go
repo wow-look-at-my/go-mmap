@@ -88,8 +88,7 @@ func mapRegion(fd int, length int64, prot Prot, flags Flag, offset int64) ([]byt
 		return nil, fmt.Errorf("CreateFileMapping: %w", err)
 	}
 
-	// The view starts at the granularity boundary at or below offset. The
-	// caller gets the part of it that begins at offset.
+	// The view starts at the granularity boundary at or below offset.
 	lead := offset % allocationGranularity()
 	viewOffset := offset - lead
 	offsetHigh := uint32(uint64(viewOffset) >> 32)
