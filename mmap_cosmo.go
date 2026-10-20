@@ -9,10 +9,7 @@ import (
 )
 
 // A Cosmopolitan binary runs on Linux, macOS, Windows and the BSDs, and its
-// system call layer speaks the Linux ABI on each of them. So the numbers below
-// are Linux's, and they are the portable ones here. golang.org/x/sys/unix does
-// not build for this target, and the standard syscall package carries only mmap
-// and munmap, so the rest go through syscall.Syscall.
+// system call layer speaks the Linux ABI on each of them.
 const (
 	msAsync      = 0x1
 	msInvalidate = 0x2
