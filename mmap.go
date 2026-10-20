@@ -14,8 +14,7 @@ import (
 	"sync"
 )
 
-// MMap represents a memory-mapped region. It is a named []byte type so callers
-// can index, slice, and range over mapped memory directly.
+// MMap represents a memory-mapped region.
 type MMap []byte
 
 // Prot describes memory protection flags.
