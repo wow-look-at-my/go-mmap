@@ -17,6 +17,10 @@ permissions:
   artifact-metadata: write
 
 jobs:
-  build:
-    uses: wow-look-at-my/go-toolchain/.github/workflows/build.yml@lkgb
-    secrets: inherit
+  test:
+    runs-on: ${{ github.event.repository.visibility == 'public' && 'ubuntu-latest' || vars.CI_RUNNER || 'ubuntu-latest' }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: wow-look-at-my/go-toolchain@lkgb
+        with:
+          autorelease: 'false'
